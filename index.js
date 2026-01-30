@@ -23,7 +23,29 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    // Send a ping to confirm a successful connection
+    //    the collection is make here
+    const database = client.db("mealMaser");
+    const userCollection = database.collection("user");
+
+    // post registered user into database
+    app.post("/user", async (req, res) => {
+      try {
+        const user = req.body;
+        const query={email:user?.email}
+        const existUser =await userCollection.findOne(query)
+        if(existUser){
+            return res.send({message:"User already exist"})
+        }else{
+           
+            const result=await userCollection.insertOne(user);
+            res.send(result)
+        }
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",
@@ -34,8 +56,6 @@ async function run() {
   }
 }
 run().catch(console.dir);
-
-
 
 app.get('/',(req,res)=>{
     res.send("this is the meal management system")
