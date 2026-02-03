@@ -1,16 +1,21 @@
-const express=require('express');
+const express = require("express");
 const cors = require("cors");
-require('dotenv').config()
+require("dotenv").config();
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
-const app=express();
-const port=3000;
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+// --- middleware ---
+app.use(cors()); // to stop cors error 
+app.use(express.json()); // to read data 
+// ------------------------------------
+
 const user = process.env.mongodb_user;
 const pass = process.env.mongoDb_pass;
+const uri = `mongodb+srv://${user}:${pass}@cluster0.g6tkuix.mongodb.net/?appName=Cluster0`;
 
-const uri=`mongodb+srv://${user}:${pass}@cluster0.g6tkuix.mongodb.net/?appName=Cluster0`;
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -21,47 +26,69 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    //    the collection is make here
     const database = client.db("mealMaser");
     const userCollection = database.collection("user");
+    const expenseCollection = database.collection("expenses");
 
-    // post registered user into database
     app.post("/user", async (req, res) => {
       try {
         const user = req.body;
-        const query={email:user?.email}
-        const existUser =await userCollection.findOne(query)
-        if(existUser){
-            return res.send({message:"User already exist"})
-        }else{
-           
-            const result=await userCollection.insertOne(user);
-            res.send(result)
+        // ডাটাবেসে চেক করা
+        console.log("user in the database ",user)
+        const query = { email: user?.email };
+        const existUser = await userCollection.findOne(query);
+
+        if (existUser) {
+          return res.send({ message: "User already exist", insertedId: null });
         }
+
+        const result = await userCollection.insertOne(user);
+        res.send(result);
       } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Server error" });
       }
     });
 
+    // Expense related api is here //
+    // @@ ********************* @@@//
+ app.post("/expenses",async(req,res)=>{
+   
+    try {
+         const userEmail = req.query.email;
+         const product = req.body;
+         if(!userEmail){
+            return res.status(401).send({message:"Unauthorized access "})
+         }
+         const user = await userCollection.findOne({ email: userEmail });
+         
+        
+         if (!user||user.email !== userEmail) {
+           return res.status(401).send({ message: "Unauthorized access" });
+         }
+         const result = await expenseCollection.insertOne(product);
+         res.status(201).send(result);
+   
+    } 
+    catch (error) {
+      console.error(error);
+      res.status(500).send({ message: "Server error" });
+    }
+ })
+
     await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!",
-    );
+    console.log("✅ Successfully connected to MongoDB!");
   } finally {
-    // Ensures that the client will close when you finish/error
-    
+    // এখানে client.close() দিবেন না, তাহলে সার্ভার কানেকশন বন্ধ হয়ে যাবে
   }
 }
 run().catch(console.dir);
 
-app.get('/',(req,res)=>{
-    res.send("this is the meal management system")
-})
+app.get("/", (req, res) => {
+  res.send("this is the meal management system");
+});
 
-
-app.listen(port,()=>{
-    console.log(`the port is running ${port}`)
-})
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
