@@ -30,12 +30,13 @@ async function run() {
     const database = client.db("mealMaser");
     const userCollection = database.collection("user");
     const expenseCollection = database.collection("expenses");
+    const mealCollection = database.collection("meal");
 
     app.post("/user", async (req, res) => {
       try {
         const user = req.body;
         // ডাটাবেসে চেক করা
-        console.log("user in the database ",user)
+        console.log("user in the database ", user);
         const query = { email: user?.email };
         const existUser = await userCollection.findOne(query);
 
@@ -51,31 +52,72 @@ async function run() {
       }
     });
 
+    // // user related api is here //
+    // @@ ********************* @@@//
+    app.get("/user", async (req, res) => {
+      try {
+        const email = req?.query?.email;
+        if (!email) {
+          return res.status(401).send({ message: "Unauthorized access" });
+        }
+        const result = await userCollection.findOne({ email: email });
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
+    app.get("/user/all", async (req, res) => {
+      try {
+        const result = await userCollection.find().toArray();
+        res.status(200).send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
     // Expense related api is here //
     // @@ ********************* @@@//
- app.post("/expenses",async(req,res)=>{
-   
-    try {
-         const userEmail = req.query.email;
-         const product = req.body;
-         if(!userEmail){
-            return res.status(401).send({message:"Unauthorized access "})
-         }
-         const user = await userCollection.findOne({ email: userEmail });
-         
-        
-         if (!user||user.email !== userEmail) {
-           return res.status(401).send({ message: "Unauthorized access" });
-         }
-         const result = await expenseCollection.insertOne(product);
-         res.status(201).send(result);
-   
-    } 
-    catch (error) {
-      console.error(error);
-      res.status(500).send({ message: "Server error" });
-    }
- })
+    app.post("/expenses", async (req, res) => {
+      try {
+        const userEmail = req.query.email;
+        const product = req.body;
+        if (!userEmail) {
+          return res.status(401).send({ message: "Unauthorized access " });
+        }
+        const user = await userCollection.findOne({ email: userEmail });
+
+        if (!user || user.email !== userEmail) {
+          return res.status(401).send({ message: "Unauthorized access" });
+        }
+        const result = await expenseCollection.insertOne(product);
+        res.status(201).send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
+    // Meal related api is here //
+    // @@ ********************* @@@//
+
+    app.post("/meal", async (req, res) => {
+      try {
+        const userEmail = req.query.email;
+        const mealData = req.body;
+
+        if (!userEmail) {
+          return res.status(401).send({ message: "Unauthorized access " });
+        }
+        const result=await mealCollection.insertOne(mealData);
+        res.status(200).send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log("✅ Successfully connected to MongoDB!");
