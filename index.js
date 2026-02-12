@@ -105,8 +105,8 @@ async function run() {
 
     app.post("/meal", async (req, res) => {
       try {
-        const userEmail = req.query.email;
-        const mealData = req.body;
+        const userEmail = req?.query?.email;
+        const mealData = req?.body;
 
         if (!userEmail) {
           return res.status(401).send({ message: "Unauthorized access " });
