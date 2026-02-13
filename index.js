@@ -35,7 +35,7 @@ async function run() {
     app.post("/user", async (req, res) => {
       try {
         const user = req.body;
-        // ডাটাবেসে চেক করা
+       
         console.log("user in the database ", user);
         const query = { email: user?.email };
         const existUser = await userCollection.findOne(query);
@@ -100,6 +100,24 @@ async function run() {
       }
     });
 
+     app.get("/expenses", async (req, res) => {
+       try {
+         const userEmail = req.query.email;
+        
+         if (!userEmail) {
+           return res.status(401).send({ message: "Unauthorized access " });
+         }
+        
+         const result = await expenseCollection.find({email: userEmail}).toArray()
+         res.status(201).send(result);
+       } catch (error) {
+         console.error(error);
+         res.status(500).send({ message: "Server error" });
+       }
+     });
+
+    
+
     // Meal related api is here //
     // @@ ********************* @@@//
 
@@ -122,7 +140,7 @@ async function run() {
     await client.db("admin").command({ ping: 1 });
     console.log("✅ Successfully connected to MongoDB!");
   } finally {
-    // এখানে client.close() দিবেন না, তাহলে সার্ভার কানেকশন বন্ধ হয়ে যাবে
+    
   }
 }
 run().catch(console.dir);
