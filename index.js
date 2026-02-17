@@ -183,6 +183,25 @@ app.patch("/expenses/:id", async (req, res) => {
       }
     });
 
+     app.get("/meal", async (req, res) => {
+       try {
+         const email = req?.query?.email;
+
+         if (!email) {
+           return res.status(401).send({ message: "Unauthorized access " });
+         }
+         const query = {
+           memberEmail: email,
+         };
+
+         const result = await mealCollection.find(query).toArray();
+         res.status(201).send(result);
+       } catch (error) {
+         console.error(error);
+         res.status(500).send({ message: "Server error" });
+       }
+     });
+
     await client.db("admin").command({ ping: 1 });
     console.log("✅ Successfully connected to MongoDB!");
   } finally {
