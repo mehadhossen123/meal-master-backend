@@ -194,7 +194,7 @@ app.patch("/expenses/:id", async (req, res) => {
            memberEmail: email,
          };
 
-         const result = await mealCollection.find(query).toArray();
+         const result = await mealCollection.find(query).sort({date:1}).toArray();
          res.status(201).send(result);
        } catch (error) {
          console.error(error);
