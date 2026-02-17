@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -36,7 +36,7 @@ async function run() {
       try {
         const user = req.body;
        
-        console.log("user in the database ", user);
+        
         const query = { email: user?.email };
         const existUser = await userCollection.findOne(query);
 
@@ -102,13 +102,14 @@ async function run() {
 
      app.get("/expenses", async (req, res) => {
        try {
-         const userEmail = req.query.email;
+         const email = req?.query?.email;
         
-         if (!userEmail) {
+         if (!email) {
            return res.status(401).send({ message: "Unauthorized access " });
          }
+         const query={userEmail:email};
         
-         const result = await expenseCollection.find({email: userEmail}).toArray()
+         const result = await expenseCollection.find(query).toArray()
          res.status(201).send(result);
        } catch (error) {
          console.error(error);
@@ -116,6 +117,51 @@ async function run() {
        }
      });
 
+     app.delete("/expenses/:id",async(req,res)=>{
+      try {
+        const email = req?.query?.email;
+      
+
+        if (!email) {
+          return res.status(401).send({ message: "Unauthorized access " });
+        }
+        const id=req.params.id;
+        
+        const query={_id:new ObjectId(id)};
+        const result=await expenseCollection.deleteOne(query);
+        res.status(200).send({message:"Expense deleted",result})
+
+      } 
+      catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+     })
+
+    
+app.patch("/expenses/:id", async (req, res) => {
+  try {
+    const email = req?.query?.email;
+
+    if (!email) {
+      return res.status(401).send({ message: "Unauthorized access " });
+    }
+    const id = req.params.id;
+     const query = { _id: new ObjectId(id) };
+    const data=req.body;
+    const updatedData={
+      $set:{
+        ...data
+      }
+    }
+
+    const result = await expenseCollection.updateOne(query,updatedData);
+    res.status(200).send({ message: "Expenses is updated", result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Server error" });
+  }
+});
     
 
     // Meal related api is here //
