@@ -187,12 +187,12 @@ app.patch("/expenses/:id", async (req, res) => {
        try {
          const email = req?.query?.email;
 
-         if (!email) {
-           return res.status(401).send({ message: "Unauthorized access " });
-         }
-         const query = {
-           memberEmail: email,
-         };
+        let query={};
+
+        if(email){
+        query = { memberEmail: email };
+        }
+        
 
          const result = await mealCollection.find(query).sort({date:1}).toArray();
          res.status(201).send(result);
