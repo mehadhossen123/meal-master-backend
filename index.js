@@ -99,7 +99,7 @@ async function run() {
         res.status(500).send({ message: "Server error" });
       }
     });
-
+// get particular expenses api
      app.get("/expenses", async (req, res) => {
        try {
          const email = req?.query?.email;
@@ -117,6 +117,18 @@ async function run() {
        }
      });
 
+// get all  member expenses api
+     app.get("/expenses/all", async (req, res) => {
+       try {
+         
+         const result = await expenseCollection.find().toArray()
+         res.status(201).send(result);
+       } catch (error) {
+         console.error(error);
+         res.status(500).send({ message: "Server error" });
+       }
+     });
+    //  delete particular expenses
      app.delete("/expenses/:id",async(req,res)=>{
       try {
         const email = req?.query?.email;
@@ -138,7 +150,7 @@ async function run() {
       }
      })
 
-    
+    // edit particular expenses
 app.patch("/expenses/:id", async (req, res) => {
   try {
     const email = req?.query?.email;
@@ -183,15 +195,30 @@ app.patch("/expenses/:id", async (req, res) => {
       }
     });
 
+    //  get personal member api
      app.get("/meal", async (req, res) => {
        try {
          const email = req?.query?.email;
 
-        let query={};
+         if (!email) {
+           return res.status(401).send({ message: "Unauthorized access " });
+         }
+         const query = {
+           memberEmail: email,
+         };
 
-        if(email){
-        query = { memberEmail: email };
-        }
+         const result = await mealCollection.find(query).toArray();
+         res.status(201).send(result);
+       } catch (error) {
+         console.error(error);
+         res.status(500).send({ message: "Server error" });
+       }
+     });
+
+
+    //  get all member meal api
+     app.get("/meal/all", async (req, res) => {
+       try {
         
 
          const result = await mealCollection.find(query).sort({date:1}).toArray();
