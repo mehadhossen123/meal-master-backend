@@ -99,17 +99,27 @@ async function run() {
         res.status(500).send({ message: "Server error" });
       }
     });
+
+
 // get particular expenses api
      app.get("/expenses", async (req, res) => {
        try {
          const email = req?.query?.email;
+         const month=req?.query?.month;
+         console.log("wanted month : ",month)
         
          if (!email) {
            return res.status(401).send({ message: "Unauthorized access " });
          }
          const query={userEmail:email};
+         if(month){
+          query.date={
+            $gte:`${month}-01`,
+            $lte:`${month}-31`
+          }
+         }
         
-         const result = await expenseCollection.find(query).toArray()
+         const result = await expenseCollection.find(query).sort({date:1}).toArray()
          res.status(201).send(result);
        } catch (error) {
          console.error(error);
@@ -200,7 +210,7 @@ app.patch("/expenses/:id", async (req, res) => {
        try {
          const email = req?.query?.email;
          const  month=req?.query?.month;
-         console.log("wanted month:",month)
+         
 
          if (!email) {
            return res.status(401).send({ message: "Unauthorized access " });
