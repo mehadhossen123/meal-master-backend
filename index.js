@@ -106,7 +106,7 @@ async function run() {
        try {
          const email = req?.query?.email;
          const month=req?.query?.month;
-         console.log("wanted month : ",month)
+         
         
          if (!email) {
            return res.status(401).send({ message: "Unauthorized access " });
@@ -129,9 +129,19 @@ async function run() {
 
 // get all  member expenses api
      app.get("/expenses/all", async (req, res) => {
+    
+    
        try {
+          const month = req.query.month;
+          let query={};
+          if(month){
+            query.date={
+              $gte:`${month}-01`,
+              $lte:`${month}-31`
+            }
+          }
          
-         const result = await expenseCollection.find().toArray()
+         const result = await expenseCollection.find(query).sort({date:1}).toArray()
          res.status(201).send(result);
        } catch (error) {
          console.error(error);
@@ -210,6 +220,7 @@ app.patch("/expenses/:id", async (req, res) => {
        try {
          const email = req?.query?.email;
          const  month=req?.query?.month;
+      
          
 
          if (!email) {
@@ -238,9 +249,17 @@ app.patch("/expenses/:id", async (req, res) => {
     //  get all member meal api
      app.get("/meal/all", async (req, res) => {
        try {
+        const month=req?.query?.month;
+        let query={};
+        if(month){
+          query.date={
+            $gte:`${month}-01`,
+            $lte:`${month}-31`
+          }
+        }
         
 
-         const result = await mealCollection.find().toArray();
+         const result = await mealCollection.find(query).sort({data:1}).toArray();
          res.status(201).send(result);
        } catch (error) {
          console.error(error);
