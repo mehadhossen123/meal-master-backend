@@ -195,10 +195,12 @@ app.patch("/expenses/:id", async (req, res) => {
       }
     });
 
-    //  get personal member api
+    //  get personal meal api
      app.get("/meal", async (req, res) => {
        try {
          const email = req?.query?.email;
+         const  month=req?.query?.month;
+         console.log("wanted month:",month)
 
          if (!email) {
            return res.status(401).send({ message: "Unauthorized access " });
@@ -206,6 +208,13 @@ app.patch("/expenses/:id", async (req, res) => {
          const query = {
            memberEmail: email,
          };
+         if(month){
+          query.date={
+            $gte:`${month}-01`,
+            $lte:`${month}-31`
+
+          }
+         }
 
          const result = await mealCollection.find(query).sort({date:1}).toArray();
          res.status(201).send(result);
